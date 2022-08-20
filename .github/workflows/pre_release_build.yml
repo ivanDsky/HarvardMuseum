@@ -1,0 +1,46 @@
+name: Master Build
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build_job:
+    name: Assemble
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Restore Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Run ktLint
+        run: ./gradlew ktlintCheck
+
+      - name: Unit Test
+        run: ./gradlew testDebugUnitTest
+        continue-on-error: true # IMPORTANT: allow pipeline to continue to Android Test Report step
+
+      - name: Android Test Report
+        uses: asadmansr/android-test-report-action@v1.2.0
+
+      - name: Assemble Debug
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v2
+        with:
+          name: apk
+          path: app/build/outputs/apk/debug/**.apk
+
