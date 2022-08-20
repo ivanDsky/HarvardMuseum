@@ -15,3 +15,7 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Harvard Museum"
 include ':app'
+include ':core'
+include ':exhibibtion'
+include ':di'
+include ':core:ui'
