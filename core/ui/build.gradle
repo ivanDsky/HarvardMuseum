@@ -32,6 +32,12 @@ android {
 
 dependencies {
     api project(":core")
+    api 'com.google.android.material:material:1.6.1'
+    api 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    //Fragment lib
+    api 'androidx.fragment:fragment-ktx:1.5.2'
+
     //SDP
     api 'com.intuit.sdp:sdp-android:1.0.6'
     api 'com.intuit.ssp:ssp-android:1.0.6'
