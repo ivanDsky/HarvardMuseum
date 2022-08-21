@@ -1,11 +1,14 @@
 package ua.zloydi.exhibibtion
 
+import strikt.api.*
+import strikt.assertions.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert
 import org.junit.Test
+import strikt.api.expect
 import ua.zloydi.exhibibtion.data.ExhibitionService
 import ua.zloydi.exhibibtion.models.*
 import ua.zloydi.test.retrofit.RetrofitTest
@@ -19,13 +22,19 @@ class ExhibitionRealServiceTest {
 	fun testResponseReceived() {
 		val testSubscriber = service.getAllExhibitions().test()
 		
+		
 		testSubscriber.assertNoErrors()
 		testSubscriber.assertComplete()
 		testSubscriber.assertValue { query ->
-			Assert.assertEquals(query.info.page, 1)
-			Assert.assertTrue(query.info.pages >= 1)
-			Assert.assertTrue(query.records.isNotEmpty())
-			Assert.assertTrue(query.records.all { it.title.isNotEmpty() })
+			expectThat(query.info){
+				get { page }.isEqualTo(1)
+				get { pages }.isGreaterThanOrEqualTo(1)
+			}
+			expectThat(query.records){
+				isNotEmpty()
+				all { get { title }.isNotEmpty() }
+				all { get { exhibitionId }.isGreaterThan(0) }
+			}
 			true
 		}
 	}

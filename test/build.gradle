@@ -25,4 +25,6 @@ android {
 dependencies {
     api project(":core")
     api 'junit:junit:4.13.2'
+    api 'io.strikt:strikt-core:0.34.0'
+//    api 'io.strikt:strikt-mockk:0.34.0'
 }
