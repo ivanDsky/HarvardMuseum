@@ -9,10 +9,16 @@ import javax.inject.Inject
 
 @ExhibitionScope
 internal class ExhibitionRemoteDataSource @Inject constructor(private val service: ExhibitionService) :
-	ExhibitionRepository {
+	ExhibitionRepository{
 	
 	override fun getAllExhibitions(): Observable<ExhibitionQuery> =
 		service.getAllExhibitions()
+	
+	override fun getPopularExhibitions(): Single<ExhibitionQuery> =
+		service.getPopularExhibitions()
+	
+	override fun getCurrentExhibitions(): Single<ExhibitionQuery> =
+		service.getCurrentExhibitions()
 	
 	override fun getExhibition(exhibitionId: Int): Single<ExhibitionDetail> =
 		service.getExhibition(exhibitionId)

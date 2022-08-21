@@ -15,6 +15,7 @@ class RetrofitModule {
 	@Singleton
 	fun getClient(): OkHttpClient =
 		OkHttpClient.Builder()
+			.addInterceptor(ApiKeyInterceptor())
 			.callTimeout(5, TimeUnit.SECONDS)
 			.readTimeout(5, TimeUnit.SECONDS)
 			.writeTimeout(5, TimeUnit.SECONDS)

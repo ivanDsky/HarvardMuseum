@@ -9,5 +9,9 @@ internal interface ExhibitionRepository {
 	//TODO rewrite with pagination
 	fun getAllExhibitions(): Observable<ExhibitionQuery>
 	
+	fun getPopularExhibitions(): Single<ExhibitionQuery>
+	
+	fun getCurrentExhibitions(): Single<ExhibitionQuery>
+	
 	fun getExhibition(exhibitionId: Int): Single<ExhibitionDetail>
 }

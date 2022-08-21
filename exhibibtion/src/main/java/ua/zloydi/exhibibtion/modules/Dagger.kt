@@ -6,9 +6,9 @@ import dagger.Module
 import dagger.Provides
 import retrofit2.Retrofit
 import ua.zloydi.exhibibtion.data.ExhibitionRemoteDataSource
+import ua.zloydi.exhibibtion.data.ExhibitionRepository
 import ua.zloydi.exhibibtion.data.ExhibitionService
 import javax.inject.Scope
-import javax.inject.Singleton
 
 interface ExhibitionDependencies {
 	val retrofit: Retrofit
@@ -18,7 +18,7 @@ interface ExhibitionDependencies {
 internal class ExhibitionModule {
 	@Provides
 	@ExhibitionScope
-	fun provideDataSource(deps: ExhibitionDependencies): ExhibitionService =
+	fun provideService(deps: ExhibitionDependencies): ExhibitionService =
 		deps.retrofit.create(ExhibitionService::class.java)
 }
 

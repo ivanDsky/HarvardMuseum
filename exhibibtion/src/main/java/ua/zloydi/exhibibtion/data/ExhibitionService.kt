@@ -11,13 +11,16 @@ import ua.zloydi.retrofit.BuildConfig
 
 internal interface ExhibitionService {
 	@GET("/exhibition")
-	fun getAllExhibitions(
-		@Query("apikey") apiKey: String = BuildConfig.API_KEY
-	): Observable<ExhibitionQuery>
+	fun getAllExhibitions(): Observable<ExhibitionQuery>
 	
 	@GET("/exhibition/{id}")
 	fun getExhibition(
-		@Path("id") exhibitionId: Int,
-		@Query("apikey") apiKey: String = BuildConfig.API_KEY
+		@Path("id") exhibitionId: Int
 	): Single<ExhibitionDetail>
+	
+	@GET("/exhibition")
+	fun getPopularExhibitions(): Single<ExhibitionQuery>
+	
+	@GET("/exhibition")
+	fun getCurrentExhibitions(): Single<ExhibitionQuery>
 }
