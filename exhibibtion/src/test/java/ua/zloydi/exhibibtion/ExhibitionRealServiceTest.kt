@@ -13,6 +13,7 @@ import ua.zloydi.exhibibtion.data.ExhibitionService
 import ua.zloydi.exhibibtion.models.*
 import ua.zloydi.test.retrofit.RetrofitTest
 import java.net.HttpURLConnection
+import java.text.SimpleDateFormat
 
 class ExhibitionRealServiceTest {
 	private val retrofit = RetrofitTest.getRetrofit(ua.zloydi.retrofit.BuildConfig.BASE_URL.toHttpUrl())
@@ -20,7 +21,7 @@ class ExhibitionRealServiceTest {
 	
 	@Test
 	fun testResponseReceived() {
-		val testSubscriber = service.getAllExhibitions().test()
+		val testSubscriber = service.getCurrentExhibitions().test()
 		
 		
 		testSubscriber.assertNoErrors()
@@ -34,6 +35,56 @@ class ExhibitionRealServiceTest {
 				isNotEmpty()
 				all { get { title }.isNotEmpty() }
 				all { get { exhibitionId }.isGreaterThan(0) }
+			}
+			true
+		}
+	}
+	
+	@Test
+	fun testUpcomingExhibitions() {
+		val testSubscriber = service.getUpcomingExhibitions().test()
+		
+		testSubscriber.assertNoErrors()
+		testSubscriber.assertComplete()
+		
+		val currentTime = System.currentTimeMillis()
+		val dateParser = SimpleDateFormat("yyyy-MM-dd")
+		
+		testSubscriber.assertValue { query ->
+			expectThat(query.records){
+				isNotEmpty()
+				all { get { title }.isNotEmpty() }
+				all {
+					get { beginDate }.isNotNull()
+					get { dateParser.parse(beginDate).time }.isGreaterThan(currentTime)
+				}
+			}
+			true
+		}
+	}
+	
+	@Test
+	fun testCurrentExhibitions() {
+		val testSubscriber = service.getCurrentExhibitions().test()
+		
+		testSubscriber.assertNoErrors()
+		testSubscriber.assertComplete()
+		
+		val currentTime = System.currentTimeMillis()
+		val dateParser = SimpleDateFormat("yyyy-MM-dd")
+		
+		testSubscriber.assertValue { query ->
+			expectThat(query.records){
+				isNotEmpty()
+				all { get { title }.isNotEmpty() }
+				all {
+					get { beginDate }.isNotNull()
+					get { dateParser.parse(beginDate).time }.isLessThan(currentTime)
+				}
+				all {
+					get { endDate }.isNotNull()
+					get { dateParser.parse(endDate).time }.isGreaterThan(currentTime)
+				}
 			}
 			true
 		}

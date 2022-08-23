@@ -46,7 +46,7 @@ class ExhibitionMockServiceTest {
 			)
 		)
 		
-		val testSubscriber = service.getAllExhibitions().test()
+		val testSubscriber = service.getCurrentExhibitions().test()
 		
 		testSubscriber.assertNoErrors()
 		testSubscriber.assertComplete()
