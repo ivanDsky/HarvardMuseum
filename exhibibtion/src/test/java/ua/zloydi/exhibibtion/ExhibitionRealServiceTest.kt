@@ -1,37 +1,40 @@
 package ua.zloydi.exhibibtion
 
-import strikt.api.*
-import strikt.assertions.*
+import androidx.paging.PagingSource
 import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.mockwebserver.MockResponse
-import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Assert
 import org.junit.Test
-import strikt.api.expect
+import strikt.api.expectThat
+import strikt.assertions.*
+import ua.zloydi.exhibibtion.data.ExhibitionPagingSource
+import ua.zloydi.exhibibtion.data.ExhibitionRemoteDataSource
 import ua.zloydi.exhibibtion.data.ExhibitionService
-import ua.zloydi.exhibibtion.models.*
+import ua.zloydi.exhibibtion.filters.StatusFilter
+import ua.zloydi.exhibibtion.filters.toFilter
+import ua.zloydi.exhibibtion.models.ExhibitionDetail
+import ua.zloydi.exhibibtion.models.ImagesItem
+import ua.zloydi.exhibibtion.models.VenuesItem
 import ua.zloydi.test.retrofit.RetrofitTest
-import java.net.HttpURLConnection
 import java.text.SimpleDateFormat
 
 class ExhibitionRealServiceTest {
-	private val retrofit = RetrofitTest.getRetrofit(ua.zloydi.retrofit.BuildConfig.BASE_URL.toHttpUrl())
+	private val retrofit =
+		RetrofitTest.getRetrofit(ua.zloydi.retrofit.BuildConfig.BASE_URL.toHttpUrl())
 	private val service = retrofit.create(ExhibitionService::class.java)
+	private val remoteDataSource = ExhibitionRemoteDataSource(service)
 	
 	@Test
 	fun testResponseReceived() {
-		val testSubscriber = service.getCurrentExhibitions().test()
+		val testSubscriber = remoteDataSource.getExhibitions(emptyList()).test()
 		
 		
 		testSubscriber.assertNoErrors()
 		testSubscriber.assertComplete()
 		testSubscriber.assertValue { query ->
-			expectThat(query.info){
+			expectThat(query.info) {
 				get { page }.isEqualTo(1)
 				get { pages }.isGreaterThanOrEqualTo(1)
 			}
-			expectThat(query.records){
+			expectThat(query.records) {
 				isNotEmpty()
 				all { get { title }.isNotEmpty() }
 				all { get { exhibitionId }.isGreaterThan(0) }
@@ -42,7 +45,11 @@ class ExhibitionRealServiceTest {
 	
 	@Test
 	fun testUpcomingExhibitions() {
-		val testSubscriber = service.getUpcomingExhibitions().test()
+		val testSubscriber =
+			ExhibitionPagingSource(remoteDataSource, listOf(StatusFilter.Status.Upcoming.toFilter()))
+				.loadSingle(PagingSource.LoadParams.Refresh(null,20,false))
+				.test()
+				.await()
 		
 		testSubscriber.assertNoErrors()
 		testSubscriber.assertComplete()
@@ -50,8 +57,10 @@ class ExhibitionRealServiceTest {
 		val currentTime = System.currentTimeMillis()
 		val dateParser = SimpleDateFormat("yyyy-MM-dd")
 		
-		testSubscriber.assertValue { query ->
-			expectThat(query.records){
+		testSubscriber.assertValue {
+			assert(it is PagingSource.LoadResult.Page)
+			it as PagingSource.LoadResult.Page
+			expectThat(it.data){
 				isNotEmpty()
 				all { get { title }.isNotEmpty() }
 				all {
@@ -62,19 +71,24 @@ class ExhibitionRealServiceTest {
 			true
 		}
 	}
-	
 	@Test
 	fun testCurrentExhibitions() {
-		val testSubscriber = service.getCurrentExhibitions().test()
-		
+		val testSubscriber =
+			ExhibitionPagingSource(remoteDataSource, listOf(StatusFilter.Status.Current.toFilter()))
+				.loadSingle(PagingSource.LoadParams.Refresh(null,20,false))
+				.test()
+				.await()
+
 		testSubscriber.assertNoErrors()
 		testSubscriber.assertComplete()
-		
+
 		val currentTime = System.currentTimeMillis()
 		val dateParser = SimpleDateFormat("yyyy-MM-dd")
-		
-		testSubscriber.assertValue { query ->
-			expectThat(query.records){
+
+		testSubscriber.assertValue {
+			assert(it is PagingSource.LoadResult.Page)
+			it as PagingSource.LoadResult.Page
+			expectThat(it.data){
 				isNotEmpty()
 				all { get { title }.isNotEmpty() }
 				all {
@@ -89,7 +103,7 @@ class ExhibitionRealServiceTest {
 			true
 		}
 	}
-	
+
 	@Test
 	fun testDetailReceived() {
 		val expected = ExhibitionDetail(

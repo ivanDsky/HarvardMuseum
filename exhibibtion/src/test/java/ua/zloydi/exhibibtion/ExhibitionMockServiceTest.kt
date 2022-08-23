@@ -1,9 +1,12 @@
 package ua.zloydi.exhibibtion
 
+import androidx.paging.PagingSource
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Test
+import ua.zloydi.exhibibtion.data.ExhibitionPagingSource
+import ua.zloydi.exhibibtion.data.ExhibitionRemoteDataSource
 import ua.zloydi.exhibibtion.data.ExhibitionService
 import ua.zloydi.exhibibtion.models.*
 import ua.zloydi.test.retrofit.RetrofitTest
@@ -13,6 +16,7 @@ class ExhibitionMockServiceTest {
 	private val webServer = MockWebServer()
 	private val retrofit = RetrofitTest.getRetrofit(webServer.url("/"))
 	private val service = retrofit.create(ExhibitionService::class.java)
+	private val remoteDataSource = ExhibitionRemoteDataSource(service)
 	
 	@After
 	fun close() {
@@ -21,36 +25,46 @@ class ExhibitionMockServiceTest {
 	
 	@Test
 	fun testResponseReceived() {
+		val pagingDataSource = ExhibitionPagingSource(remoteDataSource, emptyList())
+		
 		webServer.enqueue(
 			MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
-				javaClass.getResource("/exhibition_query.json")!!.readText()
+				javaClass.getResource("/exhibition_query_1.json")!!.readText()
 			)
 		)
 		
-		val expected = ExhibitionQuery(
-			Info(235, 1, 470), listOf(
-				ExhibitionItem(
-					exhibitionId = 225,
-					title = "Colors of the Caucasus",
-					beginDate = "1990-06-16",
-					endDate = "1990-09-09",
-					primaryImageUrl = null
-				),
-				ExhibitionItem(
-					exhibitionId = 249,
-					title = "David Smith: \"This work is my identity\"",
-					beginDate = "1995-06-03",
-					endDate = "1996-05-05",
-					primaryImageUrl = "http://nrs.harvard.edu/urn-3:huam:GS04997_dynmc"
-				),
+		webServer.enqueue(
+			MockResponse().setResponseCode(HttpURLConnection.HTTP_OK).setBody(
+				javaClass.getResource("/exhibition_query_2.json")!!.readText()
 			)
 		)
 		
-		val testSubscriber = service.getCurrentExhibitions().test()
+		val expected =  listOf(
+			ExhibitionItem(
+				exhibitionId = 225,
+				title = "Colors of the Caucasus",
+				beginDate = "1990-06-16",
+				endDate = "1990-09-09",
+				primaryImageUrl = null
+			),
+			ExhibitionItem(
+				exhibitionId = 249,
+				title = "David Smith: \"This work is my identity\"",
+				beginDate = "1995-06-03",
+				endDate = "1996-05-05",
+				primaryImageUrl = "http://nrs.harvard.edu/urn-3:huam:GS04997_dynmc"
+			)
+		)
+
+		pagingDataSource.loadSingle(PagingSource.LoadParams.Refresh(null, 4, false)).test()
+			.await()
+			.assertValue(PagingSource.LoadResult.Page(expected,null,2))
+			.assertComplete()
 		
-		testSubscriber.assertNoErrors()
-		testSubscriber.assertComplete()
-		testSubscriber.assertResult(expected)
+		pagingDataSource.loadSingle(PagingSource.LoadParams.Append(2,4,false)).test()
+			.await()
+			.assertValue(PagingSource.LoadResult.Page(expected,1,3))
+			.assertComplete()
 	}
 	
 	@Test
@@ -95,7 +109,7 @@ class ExhibitionMockServiceTest {
 			publications = null
 		)
 		
-		val testSubscriber = service.getExhibition(249).test()
+		val testSubscriber = remoteDataSource.getExhibition(249).test()
 		
 		testSubscriber.assertNoErrors()
 		testSubscriber.assertComplete()
