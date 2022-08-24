@@ -1,4 +1,4 @@
-package ua.zloydi.retrofit
+package ua.zloydi.search
 
 import dagger.Module
 import dagger.Provides

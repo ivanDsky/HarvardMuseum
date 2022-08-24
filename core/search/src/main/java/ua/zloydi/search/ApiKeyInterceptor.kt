@@ -1,4 +1,4 @@
-package ua.zloydi.retrofit
+package ua.zloydi.search
 
 import okhttp3.Interceptor
 import okhttp3.Response

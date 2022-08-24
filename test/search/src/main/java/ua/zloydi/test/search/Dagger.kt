@@ -1,12 +1,11 @@
-package ua.zloydi.test.retrofit
+package ua.zloydi.test.search
 
 import hu.akarnokd.rxjava3.retrofit.RxJava3CallAdapterFactory
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
-import okhttp3.mockwebserver.MockWebServer
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import ua.zloydi.retrofit.ApiKeyInterceptor
+import ua.zloydi.search.ApiKeyInterceptor
 import java.util.concurrent.TimeUnit
 
 object RetrofitTest {
